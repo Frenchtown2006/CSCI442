@@ -1,0 +1,9 @@
+import numpy as np
+import cv2 as cv
+
+img = cv.imread("easyCandy.jpg", cv.IMREAD_COLOR)
+
+cv.imshow("Candy", img)
+
+cv.waitKey(0)
+cv.destroyAllWindows()
