@@ -4,58 +4,83 @@
 import numpy as np
 import cv2 as cv
 
-
+#import picture
 img = cv.imread("final.jpg", cv.IMREAD_COLOR)
 copy = cv.imread("final.jpg", cv.IMREAD_COLOR)
 
+
+#gray original picture + blur + canny
 gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
 gray = cv.GaussianBlur(gray,(5,5),0)
-gray = cv.Canny(gray,32,50)
+gray = cv.Canny(gray,35,50)
 
-##kernel = np.ones((5,5), np.uint8)
-##gray = cv.morphologyEx(gray, cv.MORPH_OPEN, kernel)
 
-##hsv = cv.cvtColor(copy, cv.COLOR_BGR2HSV)
-##(h,s,v) = cv.split(hsv)
-##v[:] = 100
-##pic = cv.merge((v,v,s))
-##gray2 = cv.cvtColor(pic, cv.COLOR_RGB2GRAY)
-##gray2 = cv.medianBlur(gray2,5)
-##
-##lower_red = np.array([169,100,100], dtype = np.uint8)
-##upper_red = np.array([189,255,255], dtype = np.uint8)
-##
+#red bounds
+lower_red = np.array([169,100,100])
+upper_red = np.array([189,255,255])
+
+#red mask
+red = cv.inRange(copy, lower_red, upper_red)
+
+#red res
+res = cv.bitwise_and(copy, copy, red)
+
+
+#gray copy picture
+gray2 = cv.cvtColor(copy, cv.COLOR_RGB2GRAY)
+gray2 = cv.bilateralFilter(gray2,9,75,75)
+gray2 = cv.addWeighted(gray,1.5,gray2,-0.5,0)
+gray2 = cv.bilateralFilter(gray2,9,75,75)
+
+
+##gray2 = cv.Canny(gray2,50,100)
+##gray2 = cv.dilate(gray2, None, iterations = 1)
+##gray2 = cv.erode(gray2, None, iterations = 1)
+
+#red bound
+##lower_red = np.array([169,100,100])
+##upper_red = np.array([189,255,255])
+
+#yellow bound
 ##lower_yellow = np.array([20,100,100], dtype = np.uint8)
 ##upper_yellow = np.array([30,255,255], dtype = np.uint8)
-##
+
+#orange bound
 ##lower_orange = np.array([0,160,190], dtype = np.uint8)
 ##upper_orange = np.array([10,250,255], dtype =np.uint8)
-##
-##red = cv.inRange(hsv, lower_red, upper_red)
-##yellow = cv.inRange(hsv, lower_yellow, upper_yellow)
+
+
+#red + yellow + orange mask
+##red = cv.inRange(copy, lower_red, upper_red)
+##yellow = cv.inRange(copy, lower_yellow, upper_yellow)
 ##orange = cv.inRange(hsv, lower_orange, upper_orange)
 
-#combined1 = cv.add(red,yellow, img)
-##combined2 = cv.add(mask3, combined1, img)
 
-#res = cv.bitwise_not(hsv, img, combined2)
+#combined masks
+#combined1 = cv.add(red,yellow, copy)
+#combined2 = cv.add(mask3, combined1, img)
+
+#res = cv.bitwise_and(copy, copy, red)
 
 
-##row = gray2.shape[0]
-##circles = cv.HoughCircles(gray2, cv.HOUGH_GRADIENT, 1, row/8,
-##                          param1=100, param2=30, minRadius=1, maxRadius=30)
-##
-##if circles is not None:
-##        circles = np.uint16(np.around(circles))
-##        for i in circles[0, :]:
-##            center = (i[0], i[1])
-##            # circle center
-##            cv.circle(hsv, center, 1, (0, 100, 100), 3)
-##            # circle outline
-##            radius = i[2]
-##            cv.circle(hsv, center, radius, (0, 255, 0), 3)
-##        print(circles.shape)
+#circle for copy picture (gray 2)
+row = gray2.shape[0]
+circles = cv.HoughCircles(gray2, cv.HOUGH_GRADIENT, 1,10,
+                          param1=100, param2=30, minRadius=1, maxRadius=30)
 
+if circles is not None:
+        circles = np.uint16(np.around(circles))
+        for i in circles[0, :]:
+            center = (i[0], i[1])
+            # circle center
+            cv.circle(copy, center, 1, (0, 100, 100), 3)
+            # circle outline
+            radius = i[2]
+            cv.circle(copy, center, radius, (0, 255, 0), 3)
+        print(circles.shape[1])
+
+
+# circle for original picture (gray 1)
 rows = gray.shape[0]
 circles = cv.HoughCircles(gray, cv.HOUGH_GRADIENT,1,10,
                           param1=358, param2=30, minRadius=1, maxRadius=30)
@@ -69,18 +94,15 @@ if circles is not None:
             # circle outline
             radius = i[2]
             cv.circle(img, center, radius, (255, 0, 255), 3)
-        print(circles.shape)
+        print(circles.shape[1])
 
 
-#cv.imshow("red", red)
+cv.imshow("original",img)
+cv.imshow("copy", copy)
+
+#cv.imshow("gray2", gray2)
 ##cv.imshow("yellow", yellow)
 ##cv.imshow("orange", orange)
-cv.imshow("original", img)
-cv.imshow("gray", gray)
-#cv.imshow("hsv", hsv)
-#cv.imshow("mask1",mask1)
 #cv.imshow("combined", combined1)
 ##cv.imshow("combined2", combined2)
-##cv.imshow("output",img)
-#cv.imshow("output2",hsv)
 cv.waitKey(0)
